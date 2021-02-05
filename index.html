@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title></title>
+    <meta
+      name="description"
+      content="particles.js is a lightweight JavaScript library for creating particles."
+    />
+    <meta name="author" content="Vincent Garreau" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <link rel="stylesheet" media="screen" href="css/style.css" />
+    <link rel="stylesheet" type="text/css" href="css/reset.css" />
+    <link
+      rel="stylesheet"
+      href="./node_modules/element-ui/lib/theme-chalk/index.css"
+    />
+  </head>
+  <body>
+    <div id="particles-js">
+      <div class="login">
+        <div class="login-top">登录</div>
+        <div class="login-center clearfix">
+          <div class="login-center-img"><img src="img/name.png" /></div>
+          <div class="login-center-input">
+            <input
+              type="text"
+              name=""
+              v-model="input1"
+              placeholder="请输入您的用户名"
+              onfocus="this.placeholder=''"
+              onblur="this.placeholder='请输入您的用户名'"
+            />
+            <!-- <el-select
+              v-model="input1"
+              filterable
+              allow-create
+              default-first-option
+              placeholder="请选择文章标签"
+            >
+              <el-option
+                v-for="item in options"
+                :key="item.key"
+                :label="item.key"
+                :value="item.key"
+              >
+              </el-option>
+            </el-select> -->
+            <!-- <el-select
+              v-model="input1"
+              filterable
+              placeholder="请输入您的用户名"
+              @blur="selectBlur"
+            >
+              <el-option
+                v-for="(item,i) in options"
+                :key="i"
+                :label="item.key"
+                :value="item.key"
+              >
+              </el-option>
+            </el-select> -->
+            <div class="login-center-input-text">用户名</div>
+          </div>
+        </div>
+        <div class="login-center clearfix">
+          <div class="login-center-img"><img src="img/password.png" /></div>
+          <div class="login-center-input">
+            <input
+              type="password"
+              name=""
+              v-model="input2"
+              placeholder="请输入您的密码"
+              onfocus="this.placeholder=''"
+              onblur="this.placeholder='请输入您的密码'"
+            />
+            <div class="login-center-input-text">密码</div>
+          </div>
+        </div>
+        <div class="login-button" @click="login">登陆</div>
+      </div>
+      <div class="sk-rotating-plane"></div>
+    </div>
+
+    <!-- scripts -->
+  </body>
+  <script src="./js/vue.js"></script>
+  <script src="./js/particles.min.js"></script>
+  <script src="./js/app.js"></script>
+  <script src="./js/jquery-1.11.1.js"></script>
+  <script src="./js/jquery.min.js"></script>
+  <script src="./js/index.js"></script>
+  <script>
+    let electron = require("electron");
+    const { ipcRenderer } = electron;
+    new Vue({
+      el: "#particles-js",
+      data: {
+        input1: "cqset_nm_eeds",
+        input2: "cqset1234",
+        options: [],
+        isName: false,
+      },
+      methods: {
+        selectBlur(e) {
+          if (e.target.value) {
+            // 不在表单的时候不需要判断，也不需要isname字段
+            this.input1 = e.target.value;
+            this.isName = true;
+          } else {
+            this.isName = false;
+          }
+        },
+        login() {
+          // console.log(this.input1, this.input2);
+          let that = this;
+          $.ajax({
+            type: "post",
+            url: "http://www.cqset.com:3000/api/v1/pc/login",
+            data: { username: that.input1, password: that.input2 },
+            success: function (res) {
+              console.log(res);
+              if (res.code == 200) {
+                let o = {
+                  departID: res.data.departID,
+                  accessToken: res.data.accessToken,
+                  password: that.input2,
+                  username: that.input1,
+                };
+                ipcRenderer.send("opennew", o);
+                // window.location.replace("home.html");
+              } else {
+                that.$message.error(res.msg);
+              }
+            },
+            // dataType: "json",
+          });
+        },
+      },
+      mounted() {
+        // ipcRenderer.on("data", (event, val) => {
+        //   // console.log(val);
+        //   for (key in val) {
+        //     // console.log(key, val[key]);
+        //     this.options.push({ key });
+        //     // if (this.input1 == key) {
+        //     //   this.input2 == val[key];
+        //     // }
+        //   }
+        // });
+        // console.log(this.options);
+      },
+    });
+  </script>
+</html>

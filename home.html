@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="./css/reset.css" />
+    <link
+      rel="stylesheet"
+      href="./node_modules/element-ui/lib/theme-chalk/index.css"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <div class="main" v-if="fullscreen">
+        <div class="left">
+          <ul class="infinite-list">
+            <div v-for="i in deviceName">
+              <li class="infinite-list-item">
+                <img src="./img/摄像头.png" alt="" />
+                <el-button
+                  type="text"
+                  @click="getvideo(i)"
+                  style="color: #fff"
+                  v-if="i.status==0 "
+                >
+                  {{ i.deviceName }}
+                </el-button>
+                <el-button type="text" @click="getvideo(i)" v-else>
+                  {{ i.deviceName }}
+                </el-button>
+              </li>
+            </div>
+          </ul>
+        </div>
+        <div class="videos" v-if="only">
+          <el-button type="text" @click="only=!only">
+            <img src="./img/返 回.png" alt="" />
+          </el-button>
+          <div style="margin-top: 5%">
+            <div id="playWind" style="margin-left: 10%"></div>
+
+            <div style="text-align: center">
+              <el-button @mousedown.native="play(0)" @mouseup.native="stop(0)"
+                >上</el-button
+              >
+              <el-button @mousedown.native="play(1)" @mouseup.native="stop(1)"
+                >下</el-button
+              >
+              <el-button @mousedown.native="play(2)" @mouseup.native="stop(2)"
+                >左</el-button
+              >
+              <el-button @mousedown.native="play(3)" @mouseup.native="stop(3)"
+                >右</el-button
+              >
+              <el-button @mousedown.native="play(4)" @mouseup.native="stop(4)"
+                >左上</el-button
+              >
+              <el-button @mousedown.native="play(5)" @mouseup.native="stop(5)"
+                >左下</el-button
+              >
+              <el-button @mousedown.native="play(6)" @mouseup.native="stop(6)"
+                >右上</el-button
+              >
+              <el-button @mousedown.native="play(7)" @mouseup.native="stop(7)"
+                >右下</el-button
+              >
+              <el-button @mousedown.native="play(8)" @mouseup.native="stop(8)"
+                >放大</el-button
+              >
+              <el-button @mousedown.native="play(9)" @mouseup.native="stop(9)"
+                >缩小</el-button
+              >
+              <el-button @mousedown.native="play(10)" @mouseup.native="stop(10)"
+                >近焦距</el-button
+              >
+              <el-button @mousedown.native="play(11)" @mouseup.native="stop(11)"
+                >远焦距</el-button
+              >
+            </div>
+          </div>
+        </div>
+        <div class="right" v-show="!only">
+          <div id="next"></div>
+          <div id="myPlayer"></div>
+
+          <!-- <el-button @click="changeFull" type="text" style="margin-left: 95%">
+            <img src="./img/放大.png" alt="" />
+          </el-button> -->
+        </div>
+      </div>
+      <!-- <div class="video" v-else>
+        <div id="myPlayers"></div>
+      </div> -->
+    </div>
+  </body>
+  <script src="./js/vue.js"></script>
+
+  <script src="./js/jquery.min.js"></script>
+  <script src="./js/jquery-1.11.1.js"></script>
+  <script src="./js/index.js"></script>
+  <script src="./js/video.js"></script>
+  <script src="./js/EZUIKit-JavaScript/ezuikit.js"></script>
+  <script>
+    let electron = require("electron");
+    const { ipcRenderer } = electron;
+    new Vue({
+      el: "#app",
+      data: {
+        fullscreen: true,
+        only: false,
+        deviceName: [],
+        device: [],
+        src: "",
+        b: "b",
+        c: "c",
+        n: 0,
+        accessToken: "",
+        departID: "",
+        url: "",
+        player: {},
+        players: {},
+        val: {},
+      },
+      methods: {
+        gettoken() {
+          let that = this;
+          that.getajax(
+            "http://www.cqset.com:3000/api/v2/token/accesstoken-get",
+            {},
+            function (res) {
+              // console.log(res);
+              that.accessToken = res.data.accessToken;
+            }
+          );
+        },
+        getajax(url, data, callback) {
+          $.ajax({
+            type: "POST",
+            url: url,
+            data: data,
+            success: function (res) {
+              //    console.log(res);
+              callback(res);
+            },
+            dataType: "json",
+          });
+        },
+        getvideo(val) {
+          // console.log(val);
+          if (val.status == 0) {
+            this.$message({
+              message: "该设备不在线",
+              type: "warning",
+            });
+          } else {
+            this.only = true;
+            this.val = val;
+            // console.log(val);
+            // console.log(this.src);
+            this.$nextTick(() => {
+              let accessToken = this.accessToken;
+              // console.log(this);
+              var decoder = new EZUIKit.EZUIPlayer({
+                id: "playWind",
+                autoplay: true,
+                url: "ezopen://open.ys7.com/" + val.deviceSerial + "/1.live",
+                accessToken: accessToken,
+                decoderPath: "./js/EZUIKit-JavaScript",
+                width: 1200,
+                height: 800,
+              });
+              console.log(
+                "ezopen://open.ys7.com/" + val.deviceSerial + "/1.live"
+              );
+              // console.log(accessToken);
+            });
+          }
+        },
+        getdata() {
+          ipcRenderer.on("data", (e, val) => {
+            // console.log(val);
+            // this.accessToken = val.accessToken;
+            this.departID = val.departID;
+            let that = this;
+            that.getajax(
+              "http://www.cqset.com:3000/api/v1/pc/devicelist",
+              {
+                departID: that.departID,
+              },
+              function (res) {
+                console.log(res);
+                let devicess = [];
+                let devices = [];
+                let lists = [];
+                let url = [];
+                res.data.list.forEach((item) => {
+                  if (item.status == 1 && item.deviceSerial.length == 9) {
+                    devices.push(item);
+                  }
+                  return devices;
+                });
+                res.data.list.forEach((item) => {
+                  if (item.deviceSerial.length == 9) {
+                    devicess.push(item);
+                  }
+                  return devicess;
+                });
+
+                that.deviceName = devicess;
+                that.device = devices.slice(that.n * 9, (that.n + 1) * 9);
+                let device = devices.slice(that.n * 9, (that.n + 1) * 9);
+                that.$nextTick(() => {
+                  device.forEach((item) => {
+                    // console.log(video(item.deviceSerial));
+
+                    url.push(
+                      "ezopen://open.ys7.com/" + item.deviceSerial + "/1.live"
+                    );
+                    return url;
+                  });
+                  that.url = url.toString();
+                  var player = new EZUIPlayer({
+                    id: "myPlayer",
+                    url: url.toString(), // ezopen播放地址逗号分隔
+                    autoplay: true,
+                    accessToken: val.accessToken,
+                    decoderPath: "./js/EZUIKit-JavaScript",
+                    width: 1565, // 宽度高度为容器规格，将按照窗口数均分
+                    height: 1060,
+                    splitBasis: 3, //设置窗口切割参数
+                  });
+                  that.player = player;
+                });
+              }
+            );
+          });
+        },
+        play(direction) {
+          let vals = this.val;
+          let that = this;
+          that.getajax(
+            "http://www.cqset.com:3000/api/v2/device/ptz_start",
+            {
+              deviceSerial: vals.deviceSerial,
+              direction: direction,
+              speed: 1,
+            },
+            function (res) {
+              console.log(res);
+            }
+          );
+        },
+        stop(direction) {
+          let vals = this.val;
+          let that = this;
+          that.getajax(
+            "http://www.cqset.com:3000/api/v2/device/ptz_stop",
+            {
+              deviceSerial: vals.deviceSerial,
+              direction: direction,
+            },
+            function (res) {
+              console.log(res);
+            }
+          );
+        },
+        closeScreenFull() {
+          let box = document.getElementsByClassName("video");
+          box.remove();
+          // this.fullscreen = true;
+        },
+        changeFull() {
+          this.fullscreen = false;
+          this.player.stop();
+          this.$message({
+            message: "正在加载中，请稍后",
+            type: "success",
+          });
+          this.$nextTick(() => {
+            var players = new EZUIPlayer({
+              id: "myPlayers",
+              url: this.url.toString(), // ezopen播放地址逗号分隔
+              autoplay: true,
+              accessToken: this.accessToken,
+              decoderPath: "./js/EZUIKit-JavaScript",
+              width: 1900, // 宽度高度为容器规格，将按照窗口数均分
+              height: 1070,
+              splitBasis: 3, //设置窗口切割参数
+            });
+            this.players = players;
+          });
+        },
+        updetevideo() {
+          this.getdata();
+          setInterval(() => {
+            this.n++;
+            // let box = document.getElementById("myPlayer");
+            // box.remove();
+            // let next = document.getElementById("next");
+            // let parent = document.getElementsByClassName("right");
+            // let myPlayer = document.createElement("div");
+            // myPlayer.id = "myPlayer";
+            // parent[0].appendChild(myPlayer);
+            this.$nextTick(() => {
+              this.getdata();
+            });
+          }, 30000);
+          clearInterval(
+            setInterval(() => {
+              this.n++;
+              this.getdata();
+            }, 30000)
+          );
+        },
+      },
+      created() {
+        this.gettoken();
+      },
+      mounted() {
+        this.updetevideo();
+        // this.getvideo();
+        let self = this;
+        this.$nextTick(function () {
+          document.addEventListener("keyup", function (e) {
+            //此处填写你的业务逻辑即可
+            if (e.keyCode == 27) {
+              self.closeScreenFull();
+            }
+          });
+        });
+      },
+    });
+  </script>
+</html>

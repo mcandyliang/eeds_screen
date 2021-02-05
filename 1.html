@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="myPlayer"></div>
+  </body>
+  <script src="./js/EZUIKit-JavaScript/ezuikit.js"></script>
+  <script src="./js/jquery.min.js"></script>
+  <script>
+    window.onload = function () {
+      var playr = new EZUIKit.EZUIPlayer({
+        id: "myPlayer",
+        url: "ezopen://open.ys7.com/243488137/1.live",
+        autoplay: true,
+        accessToken:
+          "at.3zmo3ly57btr7f6w4p4xqauo4nbgahdx-32ggyzk5se-1m0d9t0-xqkaipi8g",
+        decoderPath: "./",
+        width: 600,
+        height: 400,
+      });
+    };
+  </script>
+</html>
